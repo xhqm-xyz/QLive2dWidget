@@ -4,9 +4,6 @@
 * 作者：星辉清梦
 * 作用：实例
 * 时间：乙巳己卯丁丑戊申
-* QLive2dWidget：用于加载和渲染live2d精灵
-* *    bool loadSprite(const QString&);     加载精灵模型，可以多次加载多个精灵，成功返回精灵句柄，失败返回空指针
-* *    QVector<QLive2dSprite*> sprites();   返回由此窗口管理的精灵列表
 * 注意：
 * *    建议使用QT5，
 * *    使用QT6进行测试无法使QLive2dWidget透明
