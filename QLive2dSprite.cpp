@@ -164,9 +164,8 @@ struct QLive2dSprite::_impClass
 	//空间管理
 	QLive2dTouch _touchManager;
 	std::array<float, 4> _spriteColor = {};		//背景颜色
-	Csm::CubismViewMatrix _spriteView = {};		//模型变换
 	Csm::CubismMatrix44 _spriteMatrix = {};		//模型变换
-	Csm::CubismPriority  _spritePriority = {};	//优先等级
+	Csm::CubismPriority _spritePriority = {};	//优先等级
 
 	//固定数据
 	const Csm::CubismId* _idParamHeadAngleX = nullptr; ///< パラメータID: ParamHeadAngleX
@@ -210,7 +209,6 @@ QLive2dSprite::QLive2dSprite(QWidget* parent)
 	setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
 	//setAttribute(Qt::WA_TransparentForMouseEvents); //鼠标穿透
 	setAttribute(Qt::WA_TranslucentBackground); // 背景透明
-	setAttribute(Qt::WA_AlwaysStackOnTop);
 	setMouseTracking(true);
 	show();
 }
@@ -627,7 +625,7 @@ void QLive2dSprite::initializeGL()
 }
 
 
-void QLive2dSprite::UpdataTime()
+void QLive2dSprite::UpdateTime()
 {
 	double deltaTimeSeconds = m_packet->_deltaTime;
 	m_packet->_renderTimeSec += deltaTimeSeconds;
@@ -720,12 +718,14 @@ void QLive2dSprite::paintGL()
 		auto glFunction = this->context()->functions();
 		glFunction->glClearColor(m_packet->_spriteColor[0], m_packet->_spriteColor[1], m_packet->_spriteColor[2], m_packet->_spriteColor[3]);
 		glFunction->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		//时间
 		auto now = std::chrono::system_clock::now();
 		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 		m_packet->_currFrame = milliseconds / 1000.0;
 		m_packet->_deltaTime = m_packet->_currFrame - m_packet->_lastFrame;
 		m_packet->_lastFrame = m_packet->_currFrame;
+
 		//位置
 		Csm::CubismMatrix44 projection;
 		if (this->GetModel()->GetCanvasWidth() > 1.0f && width() < height())
@@ -737,11 +737,10 @@ void QLive2dSprite::paintGL()
 		{
 			projection.Scale(static_cast<float>(height()) / static_cast<float>(width()), 1.0f);
 		}
-		projection.MultiplyByMatrix(&(m_packet->_spriteView));
 		projection.MultiplyByMatrix(GetModelMatrix());
 
 		//绘制
-		this->UpdataTime();
+		this->UpdateTime();
 		this->GetRenderer<Csm::Rendering::CubismRenderer_OpenGLES2>()->SetMvpMatrix(&projection);
 		this->GetRenderer<Csm::Rendering::CubismRenderer_OpenGLES2>()->DrawModel();
 	}
@@ -754,31 +753,11 @@ void QLive2dSprite::resizeGL(int width, int height)
 	QOpenGLWidget::resizeGL(width, height);
 	this->context()->functions()->glViewport(0, 0, width, height);
 
-	// 画面
-	const Csm::csmFloat32 ViewScale = 1.0f;
-	const Csm::csmFloat32 ViewMaxScale = 2.0f;
-	const Csm::csmFloat32 ViewMinScale = 0.8f;
-	const Csm::csmFloat32 ViewLogicalMaxL = -2.0f;
-	const Csm::csmFloat32 ViewLogicalMaxR = +2.0f;
-	const Csm::csmFloat32 ViewLogicalMaxB = -2.0f;
-	const Csm::csmFloat32 ViewLogicalMaxT = +2.0f;
-
 	float ratio = static_cast<float>(width) / static_cast<float>(height);
 	float left = -ratio;
 	float right = ratio;
 	float bottom = +1;
 	float top = -1;
-
-	m_packet->_spriteView.SetScreenRect(left, right, bottom, top);
-	m_packet->_spriteView.Scale(ViewScale, ViewScale);
-	m_packet->_spriteView.SetMaxScale(ViewMaxScale);
-	m_packet->_spriteView.SetMinScale(ViewMinScale);
-	m_packet->_spriteView.SetMaxScreenRect(
-		ViewLogicalMaxL,
-		ViewLogicalMaxR,
-		ViewLogicalMaxB,
-		ViewLogicalMaxT
-	);
 
 	m_packet->_spriteMatrix.LoadIdentity();
 	if (width > height)
@@ -828,6 +807,24 @@ void QLive2dSprite::ReleaseExpressions()
 	m_packet->_expressions.Clear();
 }
 
+QString QLive2dSprite::HitTest(float x, float y, float opa)
+{
+	if (_opacity >= opa)
+	{
+		const Csm::csmInt32 count = m_packet->_Setting->GetHitAreasCount();
+		for (Csm::csmInt32 i = 0; i < count; i++)
+		{
+			Csm::csmString AreaName = m_packet->_Setting->GetHitAreaName(i);
+			if (IsHit(m_packet->_Setting->GetHitAreaId(i), x, y))
+			{
+				Csm::csmString AreaName = m_packet->_Setting->GetHitAreaName(i);
+				return QLive2dAdapter::CsmStringToQString(AreaName);
+			}
+		}
+	}
+	return "";
+}
+
 
 
 void QLive2dSprite::wheelEvent(QWheelEvent* Event)
@@ -848,20 +845,35 @@ void QLive2dSprite::resizeEvent(QResizeEvent* Event)
 void QLive2dSprite::mousePressEvent(QMouseEvent* Event)
 {
 	QOpenGLWidget::mousePressEvent(Event);
+	m_packet->_touchManager.TouchesBegan(Event->x(), Event->y());
 }
 
 void QLive2dSprite::mouseReleaseEvent(QMouseEvent* Event)
 {
 	QOpenGLWidget::mouseReleaseEvent(Event);
+	float spriteX = m_packet->_spriteMatrix.TransformX(m_packet->_touchManager.GetX());
+	float spriteY = m_packet->_spriteMatrix.TransformY(m_packet->_touchManager.GetY());
+	QString HitName = this->HitTest(spriteX, spriteY);
+
+	if (HitName == "Head")
+	{
+		//TODO SOME THING
+	}
+	else if (HitName == "Body")
+	{
+		//TODO SOME THING
+	}
+	else if (HitName == "EveryThing")
+	{
+		//TODO SOME THING
+	}
 }
 
 void QLive2dSprite::mouseMoveEvent(QMouseEvent* Event)
 {
 	QOpenGLWidget::mouseMoveEvent(Event);
-	float screenX = m_packet->_spriteMatrix.TransformX(m_packet->_touchManager.GetX());
-	float screenY = m_packet->_spriteMatrix.TransformY(m_packet->_touchManager.GetY());
-	float viewX = m_packet->_spriteView.InvertTransformX(screenX);
-	float viewY = m_packet->_spriteView.InvertTransformY(screenY);
 	m_packet->_touchManager.TouchesMoved(Event->x(), Event->y());
-	this->SetDragging(viewX, viewY);
+	float spriteX = m_packet->_spriteMatrix.TransformX(m_packet->_touchManager.GetX());
+	float spriteY = m_packet->_spriteMatrix.TransformY(m_packet->_touchManager.GetY());
+	this->SetDragging(spriteX, spriteY);
 }

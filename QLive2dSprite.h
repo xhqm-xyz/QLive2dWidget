@@ -145,10 +145,11 @@ protected: //事件
     virtual void mouseMoveEvent(QMouseEvent*) override; //释放
 
 private:
-    void UpdataTime();
+    void UpdateTime();
     void ReleaseVoices();
     void ReleaseMotions();
     void ReleaseExpressions();
+    QString HitTest(float, float, float opa = 1.f);
 
 signals: //信号
     void startLoaded();						//加载模型

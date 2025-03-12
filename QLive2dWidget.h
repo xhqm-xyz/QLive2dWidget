@@ -32,7 +32,7 @@ protected: //事件
     virtual void resizeEvent(QResizeEvent*) override; //大小
     virtual void mousePressEvent(QMouseEvent*) override; //按下
     virtual void mouseReleaseEvent(QMouseEvent*) override; //释放
-    virtual void mouseMoveEvent(QMouseEvent*) override; //释放
+    virtual void mouseMoveEvent(QMouseEvent*) override; //鼠标移动
 };
 
 #endif //QLIVE2DWIDGET
