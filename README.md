@@ -53,12 +53,12 @@
 	Sprite2->setColor(0.0f, 0.3f, 0.0f, 0.1f);
 	Sprite3->setColor(0.0f, 0.0f, 0.3f, 0.1f);
 	//切换表情
-	Sprite2->setPriority(Csm::CubismPriority::PriorityNormal);
 	QStringList Emoticons = Sprite2->spriteEmoticons();
-	Sprite2->setMotion(Emoticons[0]);
+	Sprite2->setEmoticon(Emoticons[0]);
 	//切换动作
+ 	Sprite3->setPriority(Csm::CubismPriority::PriorityNormal);
 	QStringList Motions = Sprite3->spriteMotions();
-	Sprite3->setEmoticon(Motions[0]);
+	Sprite3->setMotion(Motions[0]);
 	//布局
 	QGridLayout gridLayout(&Widget);
 	gridLayout.addWidget(Sprite1, 0, 0, 1, 9);
