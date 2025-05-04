@@ -1,7 +1,3 @@
-# QLive2dWidget
-官方给出的代码太过繁琐与复杂，故此使用Qt重写Demo并封装
-
-
 
 *作者：星辉清梦*
 * QLive2dAdapter
@@ -31,6 +27,9 @@
 * *    建议使用QT5，
 * *    使用QT6进行测试无法使QLive2dWidget透明
 * *    作者使用的版本是Qt5.12.6，测试的版本是Qt6.9.0bate
+* *	20250504更新
+* *    建议使用QT5.15.2，
+* *    使用QT5.12进行测试无法捕获音频帧
 
 ***示例：***
 
@@ -52,18 +51,22 @@
 	Sprite1->setColor(0.0f, 0.3f, 0.7f, 0.1f);
 	Sprite2->setColor(0.0f, 0.3f, 0.0f, 0.1f);
 	Sprite3->setColor(0.0f, 0.0f, 0.3f, 0.1f);
+	//播放声音
+	Sprite1->openVoice("/voice.wav");
 	//切换表情
+	Sprite2->setPriority(Csm::CubismPriority::PriorityNormal);
 	QStringList Emoticons = Sprite2->spriteEmoticons();
-	Sprite2->setEmoticon(Emoticons[0]);
+	Sprite2->setMotion(Emoticons[0]);
 	//切换动作
- 	Sprite3->setPriority(Csm::CubismPriority::PriorityNormal);
 	QStringList Motions = Sprite3->spriteMotions();
-	Sprite3->setMotion(Motions[0]);
+	Sprite3->setEmoticon(Motions[0]);
 	//布局
 	QGridLayout gridLayout(&Widget);
 	gridLayout.addWidget(Sprite1, 0, 0, 1, 9);
 	gridLayout.addWidget(Sprite2, 1, 0, 1, 5);
 	gridLayout.addWidget(Sprite3, 1, 4, 1, 5);
+
+
 	
 
 	int res = App.exec();
