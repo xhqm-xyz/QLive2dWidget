@@ -7,9 +7,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MainQLive2d.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="QLive2dAdapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -17,6 +14,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="QLive2dWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainQLive2d.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

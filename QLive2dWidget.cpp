@@ -7,7 +7,8 @@ QLive2dWidget::QLive2dWidget(QWidget* parent)
 	setStyleSheet("background-color:rgba(255, 255, 255, 0);");
 	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 	setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
-	//setAttribute(Qt::WA_TransparentForMouseEvents); //鼠标穿透
+	setWindowFlags(windowFlags() | Qt::Tool);
+
 	setAttribute(Qt::WA_TranslucentBackground); // 背景透明
 	setAttribute(Qt::WA_StyledBackground);
 	resize(360, 540);

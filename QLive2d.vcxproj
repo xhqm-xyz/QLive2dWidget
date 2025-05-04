@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9E1DB66A-6572-413C-B8E2-1B83BAA48C6F}</ProjectGuid>
     <Keyword>QtVS_v304</Keyword>
-    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.26100.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.22000.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0.22000.0</WindowsTargetPlatformVersion>
     <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
     <ProjectName>QLive2dWidget</ProjectName>
@@ -32,13 +32,13 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>5.12.6_msvc2017_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
+    <QtInstall>5.15.2_msvc2019_64</QtInstall>
+    <QtModules>core;gui;multimedia;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>5.12.6_msvc2017_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
+    <QtInstall>5.15.2_msvc2019_64</QtInstall>
+    <QtModules>core;gui;multimedia;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -56,14 +56,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>.\Depend\CubismSdkForNative\Core\include;.\Depend\CubismSdkForNative\Framework\include;$(IncludePath)</IncludePath>
+    <IncludePath>.\Depend\CubismSdkForNative\glew\include;.\Depend\CubismSdkForNative\Core\include;.\Depend\CubismSdkForNative\Framework\include;$(IncludePath)</IncludePath>
     <LibraryPath>.\Depend\CubismSdkForNative\glew\lib\Debug;.\Depend\CubismSdkForNative\Core\lib;.\Depend\CubismSdkForNative\Framework\lib;.\Depend\CubismSdkForNative\Framework\lib\Debug;$(LibraryPath)</LibraryPath>
-    <OutDir>$(ShortProjectName)\$(Configuration)\</OutDir>
+    <OutDir>$(ShortProjectName)</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>.\Depend\CubismSdkForNative\Core\include;.\Depend\CubismSdkForNative\Framework\include;$(IncludePath)</IncludePath>
+    <IncludePath>.\Depend\CubismSdkForNative\glew\include;.\Depend\CubismSdkForNative\Core\include;.\Depend\CubismSdkForNative\Framework\include;$(IncludePath)</IncludePath>
     <LibraryPath>.\Depend\CubismSdkForNative\glew\lib\Release;.\Depend\CubismSdkForNative\Core\lib;.\Depend\CubismSdkForNative\Framework\lib;.\Depend\CubismSdkForNative\Framework\lib\Release;$(LibraryPath)</LibraryPath>
-    <OutDir>$(ShortProjectName)\$(Configuration)\</OutDir>
+    <OutDir>$(ShortProjectName)</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -119,7 +119,12 @@
     <ClCompile Include="QLive2dAdapter.cpp" />
     <ClCompile Include="QLive2dSprite.cpp" />
     <ClCompile Include="QLive2dWidget.cpp" />
-    <ClCompile Include="MainQLive2d.cpp" />
+    <ClCompile Include="MainQLive2d.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="QLive2dAdapter.h" />

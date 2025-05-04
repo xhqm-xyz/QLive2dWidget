@@ -29,6 +29,8 @@ public:
     static void Enable();   //启用SDK
     static void Disable();  //关闭SDK
 
+    static QString StdStringToQString(const std::string& string);
+    static std::string QStringToStdString(const QString& string);
     static QString CsmStringToQString(const Csm::csmString& string);
     static std::string CsmStringToStdString(const Csm::csmString& string);
     static Csm::csmString QStringToCsmString(const QString& string);

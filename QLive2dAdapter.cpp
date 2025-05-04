@@ -24,6 +24,18 @@ void QLive2dAdapter::Disable()
     if (isEnable == 0) Csm::CubismFramework::Dispose(); // 关闭 SDK（程序退出前调用）
 }
 
+QString QLive2dAdapter::StdStringToQString(const std::string& string)
+{
+    QString res = QString::fromStdString(string);
+    return res;
+}
+
+std::string QLive2dAdapter::QStringToStdString(const QString& string)
+{
+    std::string res = string.toStdString();
+    return res;
+}
+
 QString QLive2dAdapter::CsmStringToQString(const Csm::csmString& string)
 {
     std::string stdString = string.GetRawString();

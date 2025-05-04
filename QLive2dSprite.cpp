@@ -1,5 +1,7 @@
 ﻿#define GLEW_STATIC
 #include <GL/glew.h>
+#include <QAudioProbe>
+#include <QMediaPlayer>
 
 #include "QLive2dSprite.h"
 
@@ -14,17 +16,17 @@
 #include <Rendering/OpenGL/CubismRenderer_OpenGLES2.hpp>
 
 
-QSound::QSound()
+QVoice::QVoice()
 	: m_SoundPath("")
 {
 }
 
-QSound::~QSound()
+QVoice::~QVoice()
 {
 	m_SoundPath = "";
 }
 
-bool QSound::LoadSound(const QString& SoundPath)
+bool QVoice::LoadSound(const QString& SoundPath)
 {
 	if (QFile::exists(SoundPath)) 
 	{ 
@@ -152,7 +154,6 @@ bool QTexture::LoadTextures(const QString& filePath)
 }
 
 
-
 struct QLive2dSprite::_impClass
 {
 	//时间管理
@@ -184,9 +185,17 @@ struct QLive2dSprite::_impClass
 	Csm::csmVector<Csm::csmRectF> _useArea;
 	Csm::csmVector<Csm::CubismIdHandle> _eyeBlinkIds;
 	Csm::csmVector<Csm::CubismIdHandle> _lipSyncsIds;
-	Csm::csmMap<Csm::csmString, QSound*>				_voices;
+	Csm::csmMap<Csm::csmString, QVoice*>				_voices;
 	Csm::csmMap<Csm::csmString, Csm::ACubismMotion*>	_motions;
 	Csm::csmMap<Csm::csmString, Csm::ACubismMotion*>	_expressions;
+
+	QString currVoice = "";
+	QString currMotion = "";
+	QString currExpression = "";
+	QAudioProbe* probe = nullptr;
+	QMediaPlayer* player = nullptr;
+	Csm::csmFloat32 voiceValue = 0.0f;
+
 };
 
 void QLive2dSprite::__connectBeganCallback(Csm::ACubismMotion* self)
@@ -204,12 +213,41 @@ void QLive2dSprite::__connectFinishedCallback(Csm::ACubismMotion* self)
 QLive2dSprite::QLive2dSprite(QWidget* parent)
 	: QOpenGLWidget(parent), m_packet(new QLive2dSprite::_impClass())
 {
+	m_packet->probe = new QAudioProbe(this);
+	m_packet->player = new QMediaPlayer(this);
+	m_packet->probe->setSource(m_packet->player);
+
+	connect(this, &QLive2dSprite::voicesChanged, [this](QString t) {this->m_packet->currVoice = t; });
+	connect(this, &QLive2dSprite::motionsChanged, [this](QString t) {this->m_packet->currMotion = t; });
+	connect(this, &QLive2dSprite::expressionsChanged, [this](QString t) {this->m_packet->currExpression = t; });
+
+	connect(m_packet->probe, &QAudioProbe::audioBufferProbed, [this](const QAudioBuffer& buffer)
+	{
+		// 计算平均音量（绝对值）
+		Csm::csmFloat32 rms = 0.0f;
+		const qint16* pcmData = buffer.constData<qint16>();
+		int samples = buffer.frameCount() * buffer.format().channelCount();
+		for (int i = 0; i < samples; ++i)
+		{ 
+			const Csm::csmFloat32 pcm = pcmData[i] / 32768.0f;;
+			rms += (pcm * pcm);
+		}
+		rms = samples > 0 ? std::sqrt(rms / samples) : 0.0f;
+		m_packet->voiceValue = rms;
+	});
+	connect(m_packet->player, &QMediaPlayer::stateChanged, [this](QMediaPlayer::State state) {
+		if (QMediaPlayer::StoppedState == state) this->m_packet->currVoice = "";
+	});
+	connect(this, &QLive2dSprite::motionsFinished, [this](Csm::ACubismMotion* self) {
+		if (self) this->m_packet->currMotion = "";
+	});
+	
 	//此处的执行顺序不可以改动，否则无法透明窗口
 	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 	setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
 	//setAttribute(Qt::WA_TransparentForMouseEvents); //鼠标穿透
 	setAttribute(Qt::WA_TranslucentBackground); // 背景透明
-	setMouseTracking(true);
+	//setMouseTracking(true);
 	show();
 }
 
@@ -231,17 +269,17 @@ QString QLive2dSprite::spriteName() const
 
 QString QLive2dSprite::spriteVoice() const
 {
-	return QString();
+	return m_packet->currVoice;
 }
 
 QString QLive2dSprite::spriteMotion() const
 {
-	return QString();
+	return m_packet->currMotion;
 }
 
-QString QLive2dSprite::spriteEmoticon() const
+QString QLive2dSprite::spriteExpression() const
 {
-	return QString();
+	return m_packet->currExpression;
 }
 
 QStringList QLive2dSprite::spriteVoices() const
@@ -266,7 +304,7 @@ QStringList QLive2dSprite::spriteMotions() const
 	return List;
 }
 
-QStringList QLive2dSprite::spriteEmoticons() const
+QStringList QLive2dSprite::spriteExpressions() const
 {
 	QStringList List;
 	for (auto iter = m_packet->_expressions.Begin();
@@ -378,18 +416,6 @@ bool QLive2dSprite::loadPath(const QString& Path)
 				GetRenderer<Csm::Rendering::CubismRenderer_OpenGLES2>()->BindTexture(i, m_packet->_spriteTextures[i].Id());
 			}
 		}
-
-
-		//m_packet->_spriteTextures.resize(count, QTexture(this->context()));
-		//for (Csm::csmInt32 i = 0; i < count; i++)
-		//{
-		//	if (strcmp(m_packet->_Setting->GetTextureFileName(i), "") != 0)
-		//	{
-		//		Csm::csmString texturePath = m_packet->_modelHome + m_packet->_Setting->GetTextureFileName(i);
-		//		m_packet->_spriteTextures[i].LoadTextures(QLive2dAdapter::CsmStringToQString(texturePath));
-		//		GetRenderer<Csm::Rendering::CubismRenderer_OpenGLES2>()->BindTexture(i, m_packet->_spriteTextures[i].Id());
-		//	}
-		//}
 	}
 
 	//Motions
@@ -406,7 +432,7 @@ bool QLive2dSprite::loadPath(const QString& Path)
 			if (strcmp(voice.GetRawString(), "") != 0)
 			{
 				Csm::csmString readPath =  m_packet->_modelHome + voice;
-				QSound* sound = new QSound();
+				QVoice* sound = new QVoice();
 				
 				if (sound->LoadSound(QLive2dAdapter::CsmStringToQString(readPath)))
 				{
@@ -515,8 +541,16 @@ bool QLive2dSprite::loadPath(const QString& Path)
 	return true;
 }
 
-bool QLive2dSprite::openVoice(const QString&)
+bool QLive2dSprite::openVoice(const QString& Path)
 {
+	QVoice Voice;
+	if (Voice.LoadSound(Path))
+	{
+		m_packet->player->setMedia(QUrl::fromLocalFile(Voice.Path()));
+		m_packet->player->setVolume(100); // 设置音量
+		m_packet->player->play(); // 开始播放
+		return true;
+	}
 	return false;
 }
 
@@ -526,7 +560,7 @@ bool QLive2dSprite::setVoice(const QString& Name)
 
 	//Name : "%s_%d"
 	Csm::csmString name = QLive2dAdapter::QStringToCsmString(Name);
-	QSound* voice = m_packet->_voices[name.GetRawString()];
+	QVoice* voice = m_packet->_voices[name.GetRawString()];
 	if (voice == nullptr) return false;
 
 	emit voicesChanged(Name);   //切换动作
@@ -550,7 +584,7 @@ bool QLive2dSprite::setMotion(const QString& Name)
 	//Name : "%s_%d"
 	Csm::csmString name = QLive2dAdapter::QStringToCsmString(Name);
 	Csm::CubismMotion* motion = static_cast<Csm::CubismMotion*>(m_packet->_motions[name.GetRawString()]);
-	QSound* voice = m_packet->_voices[name.GetRawString()];
+	QVoice* voice = m_packet->_voices[name.GetRawString()];
 	if (motion == nullptr) return false;
 
 	emit motionsChanged(Name);   //切换动作
@@ -570,7 +604,7 @@ bool QLive2dSprite::setMotion(const QString& Name)
 	return (Csm::InvalidMotionQueueEntryHandleValue != MotionHandle); 
 }
 
-bool QLive2dSprite::setEmoticon(const QString& Name)
+bool QLive2dSprite::setExpression(const QString& Name)
 {
 	if (_motionManager->IsFinished() == false) return false;
 
@@ -579,7 +613,7 @@ bool QLive2dSprite::setEmoticon(const QString& Name)
 	Csm::ACubismMotion* motion = m_packet->_expressions[name];
 	if (motion == nullptr) return false;
 
-	emit emoticonsChanged(Name); //切换表情
+	emit expressionsChanged(Name); //切换表情
 	_expressionManager->StartMotion(motion, false);
 	return true;
 }
@@ -687,16 +721,13 @@ void QLive2dSprite::UpdateTime()
 	// リップシンクの設定
 	if (_lipSync)
 	{
-		// リアルタイムでリップシンクを行う場合、システムから音量を取得して0〜1の範囲で値を入力します。
-		Csm::csmFloat32 value = 0.0f;
-
-		// 状態更新/RMS値取得
+		// 状態更新/RMS値取得0〜1
+		//m_packet->voiceValue = 0.5f;
 		//m_packet->_voiceHandler->Update(deltaTimeSeconds);
-		//value = m_packet->_voiceHandler->GetRms();
-
+		//this->m_packet->voiceValue = m_packet->_voiceHandler->GetRms();
 		for (Csm::csmUint32 i = 0; i < m_packet->_lipSyncsIds.GetSize(); ++i)
 		{
-			_model->AddParameterValue(m_packet->_lipSyncsIds[i], value, 0.8f);
+			_model->AddParameterValue(m_packet->_lipSyncsIds[i], this->m_packet->voiceValue, 0.8f);
 		}
 	}
 

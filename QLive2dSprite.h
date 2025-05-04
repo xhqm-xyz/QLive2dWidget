@@ -35,13 +35,13 @@
 
 #include "QLive2dAdapter.h"
 
-class QSound
+class QVoice
 {
 private:
     QString m_SoundPath = "";
 public:
-    QSound();
-    ~QSound();
+    QVoice();
+    ~QVoice();
 public:
     bool LoadSound(const QString& SoundPath);
 public:
@@ -114,18 +114,18 @@ public:
     virtual ~QLive2dSprite();
 public:
     QString spriteName() const;
-    QString spriteVoice() const;             //当前声音
-    QString spriteMotion() const;             //当前动作
-    QString spriteEmoticon() const;           //当前表情
-    QStringList spriteVoices() const;        //声音列表
-    QStringList spriteMotions() const;        //动作列表
-    QStringList spriteEmoticons() const;      //表情列表
+    QString spriteVoice() const;              //当前声音
+    QString spriteMotion() const;             //当前动画
+    QString spriteExpression() const;         //当前动作
+    QStringList spriteVoices() const;         //声音列表
+    QStringList spriteMotions() const;        //动画列表
+    QStringList spriteExpressions() const;    //动作列表
 public:
     bool loadPath(const QString&);
     bool openVoice(const QString&);
     bool setVoice(const QString&);
     bool setMotion(const QString&);
-    bool setEmoticon(const QString&);
+    bool setExpression(const QString&);
     void setColor(float red, float green, float blue, float alph);      //填充颜色
     void setMatrix(const Csm::CubismMatrix44&);                         //变换矩阵
     void setPriority(const Csm::CubismPriority&);                       //优先等级
@@ -143,7 +143,6 @@ protected: //事件
     virtual void mousePressEvent(QMouseEvent*) override; //按下
     virtual void mouseReleaseEvent(QMouseEvent*) override; //释放
     virtual void mouseMoveEvent(QMouseEvent*) override; //释放
-
 private:
     void UpdateTime();
     void ReleaseVoices();
@@ -155,11 +154,11 @@ signals: //信号
     void startLoaded();						//加载模型
     void loadModelFailed();					//加载失败
     void loadModelSucceeded();				//加载成功
-    void voicesChanged(QString);			//切换动作
-    void motionsChanged(QString);			//切换动作
-    void emoticonsChanged(QString);			//切换表情
-    void motionsBegan(Csm::ACubismMotion*);		//动作开始
-    void motionsFinished(Csm::ACubismMotion*);	//动作结束
+    void voicesChanged(QString);			//切换声音
+    void motionsChanged(QString);			//切换动画
+    void expressionsChanged(QString);		//切换动作
+    void motionsBegan(Csm::ACubismMotion*);		//动画开始
+    void motionsFinished(Csm::ACubismMotion*);	//动画结束
 };
 
 #endif
